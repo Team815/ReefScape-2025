@@ -3,9 +3,7 @@ package frc.robot;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.CANSparkBase;
-import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,15 +20,15 @@ public class SwerveModule {
 
     private double maxLinearSpeed = DEFAULT_MAX_LINEAR_SPEED;
     private double maxAngularSpeed = DEFAULT_MAX_ANGULAR_SPEED;
-    private final CANSparkBase linearMotor;
-    private final CANSparkBase angularMotor;
+    private final TalonFX linearMotor;
+    private final TalonFX angularMotor;
     private final CANcoder angleSensor;
     private final Translation2d translation;
     private final PIDController pid = new PIDController(DEFAULT_P, 0d, 0d);
 
     public SwerveModule(
-        CANSparkBase linearMotor,
-        CANSparkBase angularMotor,
+        TalonFX linearMotor,
+        TalonFX angularMotor,
         CANcoder angleSensor,
         Translation2d translation) {
         this.linearMotor = linearMotor;
@@ -47,11 +45,8 @@ public class SwerveModule {
         double angleOffset,
         double x,
         double y) {
-        var linearMotor = new CANSparkMax(linearMotorId, MotorType.kBrushless);
-        var angularMotor = new CANSparkMax(angularMotorId, MotorType.kBrushless);
-        linearMotor.restoreFactoryDefaults();
-        angularMotor.restoreFactoryDefaults();
-        linearMotor.getEncoder().setPositionConversionFactor(0.046d);
+        var linearMotor = new TalonFX(linearMotorId);
+        var angularMotor = new TalonFX(angularMotorId);
         setMaxAcceleration(linearMotor, DEFAULT_MAX_LINEAR_ACCELERATION);
         setMaxAcceleration(angularMotor, DEFAULT_MAX_ANGULAR_ACCELERATION);
         var angleSensor = new CANcoder(angleSensorId);
@@ -83,11 +78,10 @@ public class SwerveModule {
 
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
-            linearMotor.getEncoder().getPosition(),
+            linearMotor.getPosition().getValue(),
             Rotation2d.fromRotations(angleSensor.getAbsolutePosition().getValue()));
     }
 
-    private static void setMaxAcceleration(CANSparkMax motor, double maxAcceleration) {
-        motor.setOpenLoopRampRate(Math.abs(maxAcceleration));
+    private static void setMaxAcceleration(TalonFX motor, double maxAcceleration) {
     }
 }
