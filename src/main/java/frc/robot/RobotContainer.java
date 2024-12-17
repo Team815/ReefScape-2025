@@ -12,16 +12,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.input.InputDevice;
 import frc.robot.input.XboxController;
 import frc.robot.subsystems.SwerveDrive;
-import frc.robot.subsystems.speedsmodulator.AccelerationLimiter;
-import frc.robot.subsystems.speedsmodulator.AngleCorrector;
-import frc.robot.subsystems.speedsmodulator.SpeedScaler;
 
 public class RobotContainer {
     private final InputDevice controller = new XboxController();
     private double startingAngle;
     private Command resetHeadingCommand;
-    private final AngleCorrector angleCorrector;
-    private final SpeedScaler speedScaler;
     private String autoName;
     private final SwerveDrive drive;
 
@@ -38,10 +33,10 @@ public class RobotContainer {
         final int frontRightRotateSensorId = 2;
         final int backLeftRotateSensorId = 3;
         final int backRightRotateSensorId = 4;
-        final double frontLeftAngularOffset = 0.87d;
-        final double frontRightAngularOffset = 0.57d;
-        final double backLeftAngularOffset = 0.48d;
-        final double backRightAngularOffset = 0.17d;
+        final double frontLeftAngularOffset = 54;
+        final double frontRightAngularOffset = 49;
+        final double backLeftAngularOffset = 34;
+        final double backRightAngularOffset = -1.145;
         final double maxDriveSpeed = 4.4d;
 
         // The max frame perimeter length is 120 in. For a square chassis,
@@ -55,7 +50,7 @@ public class RobotContainer {
             frontLeftSpinId,
             frontLeftRotateId,
             frontLeftRotateSensorId,
-            frontLeftAngularOffset,
+            Math.toRadians(frontLeftAngularOffset),
             halfLength,
             halfWidth
         );
@@ -64,7 +59,7 @@ public class RobotContainer {
             frontRightSpinId,
             frontRightRotateId,
             frontRightRotateSensorId,
-            frontRightAngularOffset,
+            Math.toRadians(frontRightAngularOffset),
             halfLength,
             -halfWidth);
 
@@ -72,7 +67,7 @@ public class RobotContainer {
             backLeftSpinId,
             backLeftRotateId,
             backLeftRotateSensorId,
-            backLeftAngularOffset,
+            Math.toRadians(backLeftAngularOffset),
             -halfLength,
             halfWidth);
 
@@ -80,7 +75,7 @@ public class RobotContainer {
             backRightSpinId,
             backRightRotateId,
             backRightRotateSensorId,
-            backRightAngularOffset,
+            Math.toRadians(backRightAngularOffset),
             -halfLength,
             -halfWidth);
 
@@ -92,13 +87,6 @@ public class RobotContainer {
                 moduleFrontRight,
                 moduleBackLeft,
                 moduleBackRight});
-
-        angleCorrector = new AngleCorrector(() -> drive.getAngle().getDegrees());
-        drive.addModulator(angleCorrector);
-        speedScaler = new SpeedScaler();
-        drive.addModulator(speedScaler);
-        var accelerationLimiter = new AccelerationLimiter(0.05d, 0.05d);
-        drive.addModulator(accelerationLimiter);
 
         configureBindings();
     }
@@ -113,7 +101,6 @@ public class RobotContainer {
 
         resetHeadingCommand = Commands.runOnce(() -> {
             drive.setAngle(180d);
-            angleCorrector.reset(180d);
         }, drive);
 
         controller.resetHeading().onTrue(resetHeadingCommand);
@@ -136,12 +123,10 @@ public class RobotContainer {
         return Commands.runOnce(() -> {
             var angle = drive.getAngle().getDegrees() - startingAngle;
             drive.setAngle(angle);
-            angleCorrector.reset(angle);
         });
     }
 
     private void resetHeading(double angle) {
         drive.setAngle(angle);
-        angleCorrector.reset(angle);
     }
 }
